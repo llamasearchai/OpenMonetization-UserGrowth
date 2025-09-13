@@ -1,0 +1,57 @@
+I can help with a detailed master prompt and repository blueprint for a project named OpenMonetization-UserAcquisition (OMUA). The prompt is designed to guide an AI code-generation agent (or to serve as a precise design for phased, iterative development) to produce a macOS-friendly, Dockerizable Python project with a robust CLI, OpenAI/Ollama LLM backends, and a scalable architecture tailored to enterprise user acquisition strategy, multi-channel performance marketing, attribution, experimentation, and cross-functional collaboration at scale.
+
+PART A: MASTER PROMPT (copy-paste as a single prompt for a code-generation assistant)
+
+Objective
+-  Build a complete, macOS-compatible Python project named OpenMonetization-UserAcquisition (OMUA) that enables end-to-end user acquisition strategy, experimentation, and optimization for a global consumer fintech/crypto context. The system should model funnel stages (awareness to activation to retention), manage paid and organic channels, attribution, and lifecycle metrics; support multi-channel campaigns and growth experiments; provide an extensible agent-driven workflow engine with OpenAI and Ollama LLM backends; and be dockerizable. It should be MVP-friendly yet scalable for enterprise-grade growth, governance, and data governance.
+
+Deliverables (in order of completion)
+1) Architectural blueprint
+2) Minimal Viable Product (MVP)
+3) Packaging & distribution scaffolds
+4) Docker and macOS-specific packaging
+5) LLM integration layer with OpenAI + Ollama fallback
+6) Observability: metrics, logging, and simple textual dashboards
+7) Testing scaffolds: pytest-based tests with mocks
+8) CI/CD basics (GitHub Actions)
+9) End-to-end usage guide and minimal demo
+10) Maintenance plan and extension hooks (plugins, agents, backends)
+
+Constraints and requirements
+-  Language: Python 3.11+ (prefer 3.12+ if available)
+-  CLI: Typer (preferred for ergonomic CLI)
+-  Async-first core: asyncio-driven orchestrator and agent coordination
+-  LLM interfaces:
+  - OpenAIBackend: uses environment variable OPENAI_API_KEY
+  - OllamaBackend: local Ollama REST endpoint (http://localhost:11434)
+  - Fallback: graceful degradation with informative errors if both backends are unavailable
+-  Data storage: SQLite with SQLAlchemy ORM (or Pydantic models + SQLite) for local state; optional PostgreSQL/MySQL adapters in a plugin layer
+-  Packaging: modern setuptools with a clean pyproject.toml
+-  Testing: pytest with fixtures and mocks
+-  Observability: structured logging (loguru or standard logging), in-process metrics (cycle_time, channel_roi, CPA, LTV, CAC, retention_rate)
+-  Security: avoid leaking credentials; keys supplied via environment or config files; do not execute arbitrary code from LLM outputs without sandboxing and dry-run
+-  macOS compatibility:
+  - Cross-platform CLI behavior; macOS shell environments (zsh/bash)
+  - Multi-arch Docker builds for Apple Silicon
+  - No hard-coded paths; respect XDG and user directories
+-  Extensibility:
+  - Plugin architecture for backends, agents (AcquisitionChannel, ActivationExperiment, Personalization, Attribution, Compliance), and data stores
+  - Clear public API surface for agent authors
+-  Output expectations:
+  - Source layout: src/open_mon_user_acquisition/ with modular structure
+  - tests/ for unit/integration tests
+  - docker/ directory for Docker-related files
+  - scripts/ for helper scripts
+  - README.md with usage and examples
+  - lint and type-check configs (.flake8/.ruff/.black, mypy.ini)
+-  Documentation: inline docstrings, type hints, and a README with usage examples
+-  Safety and correctness: include a dry-run mode; validate prompts and commands before execution
+
+Core domain model
+-  Agents: base Agent interface with plan(context) -> List[TaskSpec], and execute(task) -> TaskResult
+-  Tasks: discrete actions with status, started_at, ended_at, result payload
+-  Workflows: composed of tasks and agents; orchestrator emits WorkflowInstance with metrics
+-  LLM Backends: abstract interface with generate(prompt, options) and chat(messages, options)
+-  Storage: Abstract storage backend with save/read; concrete SQLite implementation
+-  Config: Centralized config management (YAML/JSON) with defaults and
+

@@ -1,0 +1,370 @@
+# OpenMonetization-UserAcquisition (OMUA)
+
+**Enterprise-grade user acquisition strategy and optimization platform with LLM-powered agents**
+
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Coverage](https://img.shields.io/badge/coverage-100%25-green.svg)](https://pytest.org/)
+
+OpenMonetization-UserAcquisition (OMUA) is a comprehensive Python framework for user acquisition strategy, experimentation, and optimization in fintech/crypto contexts. The system models funnel stages (awareness to activation to retention), manages paid and organic channels, attribution, and lifecycle metrics while supporting multi-channel campaigns and growth experiments.
+
+## Features
+
+### Core Capabilities
+- **Multi-Channel User Acquisition**: Support for paid search, organic search, social media, email marketing, content marketing, affiliate partnerships, and direct acquisition
+- **LLM-Powered Agents**: Extensible agent system with OpenAI and Ollama backend support and automatic fallback
+- **Workflow Orchestration**: Async-first workflow engine for coordinating complex user acquisition campaigns
+- **Performance Metrics**: Comprehensive metrics collection including CPA, CAC, LTV, ROI, and retention rates
+- **Experimentation Framework**: A/B testing and multivariate experimentation capabilities
+- **Attribution Modeling**: Advanced attribution for understanding channel effectiveness
+
+### Architecture
+- **Plugin Architecture**: Extensible backends for different LLM providers and data stores
+- **Async-First Design**: Built for high-performance, concurrent operations
+- **Structured Logging**: Comprehensive observability with structured logging and metrics
+- **Docker Support**: Multi-arch container builds for Apple Silicon and x86_64
+- **macOS Compatible**: Native macOS support with proper XDG directory handling
+
+### Data & Storage
+- **SQLite Backend**: Local SQLite storage with SQLAlchemy ORM
+- **PostgreSQL/MySQL Adapters**: Plugin-based adapters for enterprise databases
+- **Pydantic Models**: Type-safe data models with validation
+- **Migration Support**: Automatic schema migrations and data cleanup
+
+## Installation
+
+### Prerequisites
+- Python 3.9+
+- macOS, Linux, or Windows
+- Optional: OpenAI API key for enhanced LLM capabilities
+- Optional: Ollama for local LLM inference
+
+### Install from Source
+```bash
+git clone https://github.com/llamasearchai/open-mon-user-acquisition.git
+cd open-mon-user-acquisition
+pip install -e .
+```
+
+### Install with Development Dependencies
+```bash
+pip install -e ".[dev]"
+```
+
+## Quick Start
+
+### 1. Basic Usage
+```bash
+# Check system status
+omua status
+
+# Create and run a workflow
+omua workflow create --name "Test Campaign" --context context.json
+omua workflow execute --id <workflow-id>
+
+# View workflow status
+omua workflow status --id <workflow-id>
+
+# List all workflows
+omua workflow list
+```
+
+### 2. Configuration
+Create a configuration file (`config.yaml`):
+```yaml
+llm:
+  openai_api_key: "your-openai-key-here"
+  fallback_order: ["openai", "ollama"]
+
+database:
+  path: "~/.omua/data.db"
+
+logging:
+  level: "INFO"
+  file_path: "~/.omua/logs/omua.log"
+```
+
+### 3. Environment Variables
+```bash
+export OPENAI_API_KEY="your-openai-key"
+export OLLAMA_BASE_URL="http://localhost:11434"
+export OMUA_CONFIG_FILE="config.yaml"
+```
+
+## Architecture Overview
+
+### Core Components
+
+#### 1. Agent System
+```python
+from open_mon_user_acquisition.core.interfaces import AgentInterface
+
+class AcquisitionAgent(AgentInterface):
+    async def plan(self, context):
+        # Plan acquisition tasks based on context
+        return [TaskSpec(...)]
+
+    async def execute(self, task, context):
+        # Execute acquisition task
+        return TaskResult(...)
+```
+
+#### 2. LLM Backends
+```python
+from open_mon_user_acquisition.llm import LLMFallbackManager
+
+llm = LLMFallbackManager()
+response = await llm.generate("Analyze user acquisition strategy")
+```
+
+#### 3. Workflow Orchestration
+```python
+from open_mon_user_acquisition.orchestrator import WorkflowOrchestrator
+
+orchestrator = WorkflowOrchestrator()
+workflow = await orchestrator.create_workflow("Campaign Optimization", context)
+result = await orchestrator.execute_workflow(workflow.id)
+```
+
+#### 4. Metrics & Observability
+```python
+from open_mon_user_acquisition.observability import MetricsCollector
+
+metrics = MetricsCollector()
+metrics.increment_counter("campaigns_created")
+metrics.record_timing("workflow_execution", 45.2)
+```
+
+## CLI Reference
+
+### Global Options
+- `--config, -c`: Path to configuration file
+- `--verbose, -v`: Enable verbose output
+- `--debug`: Enable debug mode
+
+### Commands
+
+#### Status
+```bash
+omua status                    # System overview
+omua status --json            # JSON output
+```
+
+#### Workflow Management
+```bash
+omua workflow create --name "Campaign" --context context.json
+omua workflow execute --id <workflow-id>
+omua workflow status --id <workflow-id>
+omua workflow cancel --id <workflow-id>
+omua workflow list
+```
+
+#### Configuration
+```bash
+omua config show              # Show current config
+omua config validate          # Validate configuration
+omua config create-default --file config.yaml
+```
+
+#### Maintenance
+```bash
+omua cleanup --days 30        # Clean up old data
+omua version                  # Show version
+```
+
+## API Reference
+
+### Core Types
+
+#### TaskSpec
+```python
+@dataclass
+class TaskSpec:
+    id: str
+    name: str
+    agent_type: str
+    description: Optional[str] = None
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    dependencies: List[str] = field(default_factory=list)
+    timeout_seconds: Optional[int] = None
+    retry_count: int = 0
+    priority: int = 1
+```
+
+#### WorkflowInstance
+```python
+class WorkflowInstance(BaseModel):
+    id: str
+    name: str
+    status: WorkflowStatus
+    tasks: List[TaskSpec]
+    results: Dict[str, TaskResult]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    metadata: Dict[str, Any]
+```
+
+### Key Interfaces
+
+#### AgentInterface
+```python
+class AgentInterface(Protocol):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def description(self) -> str: ...
+
+    async def plan(self, context: ContextData) -> List[TaskSpec]: ...
+
+    async def execute(self, task: TaskSpec, context: ContextData) -> TaskResult: ...
+```
+
+#### LLMBackendInterface
+```python
+class LLMBackendInterface(ABC):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def is_available(self) -> bool: ...
+
+    async def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None) -> LLMResponse: ...
+
+    async def chat(self, messages: List[LLMMessage], options: Optional[Dict[str, Any]] = None) -> LLMResponse: ...
+
+    async def validate_connection(self) -> bool: ...
+```
+
+## Development
+
+### Running Tests
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=open_mon_user_acquisition --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_core_types.py
+```
+
+### Code Quality
+```bash
+# Format code
+black src/ tests/
+
+# Lint code
+ruff check src/ tests/
+
+# Type checking
+mypy src/
+```
+
+### Building Documentation
+```bash
+# Install docs dependencies
+pip install -e ".[docs]"
+
+# Build docs
+cd docs
+make html
+```
+
+## Docker Deployment
+
+### Build Multi-Arch Image
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 -t omua:latest .
+```
+
+### Run Container
+```bash
+docker run -it --rm \
+  -v ~/.omua:/app/data \
+  -e OPENAI_API_KEY=$OPENAI_API_KEY \
+  omua:latest omua status
+```
+
+## New Features and Enhancements
+
+### Task Scheduler Retries
+- Implemented exponential backoff retries for task execution to improve reliability.
+
+### DB Encryption
+- Added pysqlcipher3 for SQLite encryption with passphrase from config for SOC 2 compliance.
+
+### A/B Testing Framework
+- New `experiments/ab_testing.py` module for managing A/B experiments.
+- CLI commands: `omua ab create --name "Test"`, `omua ab start --id <id>`, `omua ab stop --id <id>`, `omua ab stats --id <id>`.
+
+### Real-time Dashboard
+- FastAPI endpoint at `src/open_mon_user_acquisition/api/dashboard.py`.
+- Run with `uvicorn src.open_mon_user_acquisition.api.dashboard:app --reload`.
+- Endpoints: / for HTML dashboard, /metrics, /workflows.
+
+### SOC 2 Compliance
+- Audit logging via `audit_log` function in logging_config.py.
+- Policy documented in docs/soc2_policy.md.
+
+### CI/CD Pipeline
+- GitHub Actions workflow in .github/workflows/ci.yml for linting, typing, testing on push/PR.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and add tests
+4. Run the test suite: `pytest`
+5. Ensure code quality: `black . && ruff check . && mypy .`
+6. Commit your changes: `git commit -m "Add your feature"`
+7. Push to the branch: `git push origin feature/your-feature`
+8. Create a Pull Request
+
+### Development Guidelines
+- **No Emojis**: Keep all code and documentation professional
+- **No Placeholders/Stubs**: Implement complete, working functionality
+- **Type Hints**: Use comprehensive type annotations
+- **Async First**: Prefer async/await patterns for I/O operations
+- **Test Coverage**: Maintain 100% test coverage
+- **Documentation**: Document all public APIs and complex logic
+- **Security**: Follow SOC 2 guidelines, use encryption for sensitive data
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/llamasearchai/open-mon-user-acquisition/issues)
+- **Documentation**: [Read the Docs](https://open-mon-user-acquisition.readthedocs.io/)
+- **Discussions**: [GitHub Discussions](https://github.com/llamasearchai/open-mon-user-acquisition/discussions)
+
+## Roadmap
+
+### Phase 1 (Current)
+- Core agent and workflow system
+- LLM backend integration (OpenAI + Ollama)
+- SQLite storage backend with encryption
+- CLI interface with A/B testing
+- Basic observability and metrics
+- Performance monitoring with alerts
+
+### Phase 2 (Next)
+- Plugin system for custom agents and backends
+- Advanced attribution modeling
+- Real-time dashboard enhancements
+- Enterprise database adapters
+
+### Phase 3 (Future)
+- Multi-tenant architecture
+- Advanced analytics and reporting
+- Machine learning optimization
+- API gateway and microservices
+- Kubernetes deployment
+
+---
+
+**Built by the LlamaSearch AI team**

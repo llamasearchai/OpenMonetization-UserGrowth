@@ -1,0 +1,2 @@
+[console_scripts]
+omua = open_mon_user_acquisition.cli.main:app
